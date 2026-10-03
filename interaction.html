@@ -1,0 +1,406 @@
+<title>Planner and Target Interaction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#fff; --bg-alt:#f5f5f5; --raise:#fff;
+  --ink:#363636; --ink-soft:#4a4a4a; --ink-faint:#7a7a7a;
+  --border:#dbdbdb; --border-soft:#ededed;
+  --link:#3273dc;
+  --lam:#0F766E; --lam-wash:rgba(15,118,110,.12);
+  --base:#3D5A80; --base-wash:rgba(61,90,128,.12);
+  --warn:#b5453c; --warn-wash:rgba(181,69,60,.10);
+  --serif:'Google Sans','Noto Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --sans:'Google Sans','Noto Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px;padding-block:52px 72px;}
+h1,h2,h3{font-family:var(--serif);font-weight:600;text-wrap:balance;margin:0;}
+h1{font-size:2.5rem;line-height:1.12;letter-spacing:-.014em;}
+h2{font-size:1.52rem;line-height:1.25;}
+h3{font-size:1rem;}
+p{margin:0 0 1em;}
+.m{font-family:var(--mono);font-size:.93em;font-variant-numeric:tabular-nums;}
+strong{font-weight:600;}
+
+.eyebrow{font-size:.74rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;margin:0 0 14px;}
+header{border-bottom:1px solid var(--border);padding-bottom:30px;margin-bottom:42px;}
+.thesis{font-family:var(--serif);font-size:1.19rem;line-height:1.52;color:var(--ink-soft);margin:20px 0 0;max-width:60ch;}
+
+section{margin-bottom:52px;}
+.act{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;}
+.act .num{font-family:var(--mono);font-size:.76rem;color:var(--ink-faint);letter-spacing:.06em;padding-top:2px;}
+.sub{color:var(--ink-soft);font-size:.96rem;margin:8px 0 18px;max-width:64ch;}
+.body-copy{max-width:64ch;}
+
+figure{margin:0;}
+.plot{background:var(--raise);border:1px solid var(--border);border-radius:10px;padding:18px 16px 14px;}
+.scroller{overflow-x:auto;}
+svg{display:block;width:100%;height:auto;min-width:560px;}
+figcaption{font-size:.87rem;color:var(--ink-soft);margin-top:14px;padding-top:12px;border-top:1px solid var(--border-soft);line-height:1.55;}
+
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.seg button{font-family:var(--sans);font-size:.83rem;font-weight:500;padding:9px 16px;border:0;background:var(--raise);color:var(--ink-soft);cursor:pointer;}
+.seg button+button{border-left:1px solid var(--border);}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg);font-weight:600;}
+.seg button:focus-visible{outline:2px solid var(--lam);outline-offset:-2px;}
+.bar{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;margin:22px 0 18px;}
+.tally{font-size:.95rem;color:var(--ink-soft);}
+.tally b{font-family:var(--mono);font-size:1.32rem;color:var(--ink);font-weight:600;}
+
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(152px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:22px 0;}
+.cell{background:var(--raise);padding:15px 16px;}
+.cell .k{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;}
+.cell .v{font-family:var(--mono);font-size:1.26rem;font-weight:600;margin-top:5px;font-variant-numeric:tabular-nums;line-height:1.2;}
+.cell .n{font-size:.76rem;color:var(--ink-faint);margin-top:4px;line-height:1.4;}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.q{background:var(--raise);padding:16px 18px;}
+.q .lab{font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;}
+.q .val{font-family:var(--mono);font-size:1.4rem;font-weight:600;margin-top:6px;font-variant-numeric:tabular-nums;}
+.q .sd{font-size:.78rem;color:var(--ink-faint);font-family:var(--mono);}
+.q.best .val{color:var(--lam);}
+
+.verdict{border-left:3px solid var(--lam);background:var(--bg-alt);padding:16px 20px;border-radius:0 8px 8px 0;font-size:.95rem;margin:22px 0 0;}
+.verdict strong{display:block;margin-bottom:4px;}
+.claims{display:grid;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.claim{background:var(--raise);padding:17px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;}
+.tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap;margin-top:3px;}
+.tag.yes{background:var(--lam-wash);color:var(--lam);}
+.tag.no{background:var(--base-wash);color:var(--base);}
+.claim p{margin:0;font-size:.93rem;line-height:1.55;}
+.rule{border:0;border-top:1px solid var(--border);margin:44px 0;}
+.foot{font-size:.84rem;color:var(--ink-faint);line-height:1.6;max-width:66ch;}
+a{color:var(--lam);}
+
+.mk{transition:cx .55s cubic-bezier(.4,0,.2,1), fill .3s, stroke .3s, opacity .3s;}
+.gh,.ar{transition:opacity .3s;}
+.row-hit{cursor:pointer;}
+.row-hit:focus-visible{outline:2px solid var(--lam);}
+@media (max-width:560px){
+  .wrap{padding-block:36px 56px;} h1{font-size:1.95rem;} body{font-size:16px;}
+  .claim{grid-template-columns:1fr;gap:9px;} .grid2{grid-template-columns:1fr;}
+}
+@media (prefers-reduced-motion:reduce){ .mk,.gh,.ar{transition:none!important;} }
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">TD-MTP &middot; paired 2&times;2 study</p>
+  <h1>Planner and Target Interaction</h1>
+  <p class="thesis">With a 1-step critic target, replacing the planner&rsquo;s single Gaussian
+  proposal with the tensor planner lowers final return on nine of ten task blocks. When the critic
+  is trained on a TD(&lambda;) target instead, with the planner, schedule and seeds unchanged, the
+  tensor planner improves return on five of ten blocks.</p>
+</header>
+
+<!-- 01 -->
+<section>
+  <div class="act"><span class="num">01</span><h2>The 2&times;2 design</h2></div>
+  <p class="sub body-copy">Each task is trained under four conditions: with and without the
+  tensor planner, crossed with a 1-step target and a TD(&lambda;) target. Both planners in a block
+  share their model initialization, and all conditions are evaluated with the same search, so
+  differences come from the collected data and the training target.</p>
+  <figure class="plot">
+    <div class="scroller"><svg id="cells" viewBox="0 0 760 210" role="img"
+      aria-label="The two-by-two design: the planner is either off or on, crossed with a 1-step or TD-lambda value target, giving four training conditions per task."></svg></div>
+    <figcaption>The planner&rsquo;s <em>effect</em> is the difference along a row, i.e. the change
+    from adding the planner with the target held fixed. Each task has one such effect per target,
+    and the interaction is the difference between the two.</figcaption>
+  </figure>
+</section>
+
+<!-- 02 -->
+<section>
+  <div class="act"><span class="num">02</span><h2>Planner effect per task under each target</h2></div>
+  <p class="sub body-copy">Each row is one task, and the mark shows the planner&rsquo;s effect on
+  final return under the selected target.</p>
+
+  <div class="bar">
+    <div class="seg" role="group" aria-label="Value target">
+      <button id="t-base" aria-pressed="false">1-step target</button>
+      <button id="t-lam"  aria-pressed="false">TD(&lambda;) target</button>
+      <button id="t-both" aria-pressed="true">compare</button>
+    </div>
+    <div class="tally" id="tally"></div>
+  </div>
+
+  <figure class="plot">
+    <div class="scroller"><svg id="chart" viewBox="0 0 760 452" role="img"
+      aria-label="Effect of the tensor planner on final return for ten task blocks. Under the 1-step target the effect is positive on one block; given a TD-lambda target it is positive on five, and the paired difference is positive on eight."></svg></div>
+    <figcaption id="cap"></figcaption>
+  </figure>
+
+  <div class="verdict" id="verdict"></div>
+</section>
+
+<!-- 03 -->
+<section>
+  <div class="act"><span class="num">03</span><h2>The four runs behind one task</h2></div>
+  <p class="sub">Clicking a row in the chart above shows the four training runs for that task.
+  Values are mean final return over the last three evaluations, averaged over seeds.</p>
+  <h3 id="tt" style="margin-bottom:10px"></h3>
+  <div class="grid2" id="quad"></div>
+  <div class="readout" id="deltas"></div>
+  <p class="body-copy" id="story"></p>
+</section>
+
+<!-- 04 -->
+<section>
+  <div class="act"><span class="num">04</span><h2>Contribution of each task to the interaction</h2></div>
+  <p class="sub body-copy">Two blocks, <span class="m">stair</span> and <span class="m">pole</span>,
+  supply about four-fifths of the summed interaction.</p>
+  <figure class="plot">
+    <div class="scroller"><svg id="share" viewBox="0 0 760 130" role="img"
+      aria-label="Share of the summed interaction by task block: stair and pole together account for about four-fifths."></svg></div>
+    <figcaption id="share-cap"></figcaption>
+  </figure>
+</section>
+
+<!-- 05 -->
+<section>
+  <div class="act"><span class="num">05</span><h2>Scope and limitations</h2></div>
+  <div class="claims">
+    <div class="claim"><span class="tag yes">shows</span><p>The study measures an interaction on a
+    paired design. Both planners in a block share their model initialization and evaluation search
+    is identical across conditions, so comparisons are within-block.</p></div>
+    <div class="claim"><span class="tag no">limit</span><p>The sign tests are descriptive counts
+    for a comparison chosen after seeing the results. They are not confirmatory tests and say
+    nothing about effect size.</p></div>
+    <div class="claim"><span class="tag no">limit</span><p>The study is underpowered as a planner
+    comparison. Cross-seed standard deviation on the planner margin is 55&ndash;77 return units,
+    while the effects of interest are 20&ndash;40; detecting them would need 16&ndash;75 seeds per
+    condition, and these runs have 3&ndash;5.</p></div>
+    <div class="claim"><span class="tag no">limit</span><p>Tensor candidates are active only in the
+    first half of training, so the endpoint score measures their downstream effect through the
+    replay buffer and the learned agent rather than the search itself.</p></div>
+    <div class="claim"><span class="tag no">limit</span><p>The largest block, <span class="m">stair</span>,
+    reverses when training is continued to twice the budget at a different dose
+    of&nbsp;<span class="m">&lambda;</span>, and we do not have an explanation for the reversal.</p></div>
+  </div>
+</section>
+
+<hr class="rule">
+<p class="foot">The numbers on this page, including the ten block effects, both sign-test
+values and the four-fifths share, are recomputed from the paper&rsquo;s ablation table. Effects are
+differences of means over the last three evaluations of each run, averaged over
+3&ndash;5&nbsp;seeds.</p>
+
+</div>
+
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i);};
+  var NS='http://www.w3.org/2000/svg';
+  function el(n,a){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);return e;}
+
+  // suite, seeds, TD-MPC2, +MTP, +lambda, TD-MTP, and their cross-seed sd
+  var B=[
+   {t:"acrobot-swingup",s:"dmc",n:5,v:[489.0,568.0,507.4,612.5],sd:[53,47,46,15]},
+   {t:"humanoid-run",   s:"dmc",n:5,v:[72.9,51.5,169.6,197.6],  sd:[47,52,22,46]},
+   {t:"humanoid-walk",  s:"dmc",n:5,v:[356.6,193.5,612.6,511.2],sd:[72,72,96,92]},
+   {t:"stair",  s:"h1",n:5,v:[525.4,293.6,459.6,651.0],sd:[188,30,33,90]},
+   {t:"pole",   s:"h1",n:5,v:[846.0,562.8,875.9,907.2],sd:[102,118,45,2]},
+   {t:"stand",  s:"h1",n:3,v:[846.6,842.5,842.7,853.0],sd:[1,3,2,15]},
+   {t:"hurdle", s:"h1",n:3,v:[593.1,494.4,656.8,593.4],sd:[16,19,82,45]},
+   {t:"run",    s:"h1",n:3,v:[782.5,753.1,810.1,762.2],sd:[41,42,1,50]},
+   {t:"walk",   s:"h1",n:3,v:[816.8,811.4,832.7,818.3],sd:[21,12,2,16]},
+   {t:"maze",   s:"h1",n:3,v:[365.8,351.7,369.9,365.7],sd:[10,16,3,6]}
+  ];
+  B.forEach(function(b){ b.d1=b.v[1]-b.v[0]; b.dl=b.v[3]-b.v[2]; b.it=b.dl-b.d1; });
+  var P1=B.filter(function(b){return b.d1>0;}).length,
+      PL=B.filter(function(b){return b.dl>0;}).length,
+      PI=B.filter(function(b){return b.it>0;}).length,
+      SUM=B.reduce(function(a,b){return a+b.it;},0);
+
+  function comb(n,k){var r=1;for(var i=0;i<k;i++)r=r*(n-i)/(i+1);return r;}
+  function twoSided(k,n){ var lo=Math.min(k,n-k),s=0;
+    for(var j=0;j<=lo;j++)s+=comb(n,j);
+    return Math.min(1,2*s/Math.pow(2,n)); }
+  var Pv1=twoSided(P1,10), PvI=twoSided(PI,10);
+
+  var st={mode:'both', sel:3};
+
+  /* ---------- 01 the 2x2 ---------- */
+  (function(){
+    var s='', cw=248, ch=54, x0=214, y0=74, gap=14;
+    var lab=[['planner off','1-step target'],['planner on','1-step target'],
+             ['planner off','TD(λ) target'],['planner on','TD(λ) target']];
+    s+='<text x="'+x0+'" y="50" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">planner off</text>';
+    s+='<text x="'+(x0+cw+gap)+'" y="50" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">planner on</text>';
+    [['1-step target','var(--base)'],['TD(λ) target','var(--lam)']].forEach(function(r,i){
+      var y=y0+i*(ch+gap);
+      s+='<text x="180" y="'+(y+ch/2+4)+'" text-anchor="end" font-size="12.5" font-weight="600" fill="'+r[1]+'">'+r[0]+'</text>';
+      [0,1].forEach(function(j){
+        var x=x0-cw/2+j*(cw+gap), on=(j===1);
+        s+='<rect x="'+x+'" y="'+y+'" width="'+cw+'" height="'+ch+'" rx="7" fill="'+(on?r[1].replace('var(--','var(--').replace(')','-wash)'):'var(--bg-alt)')+'" stroke="'+r[1]+'" stroke-width="'+(on?1.4:1)+'" opacity="'+(on?1:.75)+'"/>';
+        var nm=[['TD-MPC2','+ planner'],['+ λ','TD-MTP']][i][j];
+        s+='<text x="'+(x+cw/2)+'" y="'+(y+ch/2+4)+'" text-anchor="middle" font-size="12.5" font-weight="'+(on?600:400)+'" fill="'+(on?r[1]:'var(--ink-soft)')+'">'+nm+'</text>';
+      });
+      // the effect arrow along the row
+      s+='<line x1="'+(x0+cw/2+3)+'" y1="'+(y+ch/2)+'" x2="'+(x0+cw/2+gap-4)+'" y2="'+(y+ch/2)+'" stroke="'+r[1]+'" stroke-width="2" marker-end="url(#a2'+i+')"/>';
+    });
+    s+='<text x="'+(x0+cw/2+gap/2)+'" y="'+(y0-14)+'" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">the planner’s effect</text>';
+    s='<defs>'+
+      '<marker id="a20" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--base)"/></marker>'+
+      '<marker id="a21" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--lam)"/></marker>'+
+      '</defs>'+s;
+    $('cells').innerHTML=s;
+  })();
+
+  /* ---------- 02 the chart ---------- */
+  var CX0=168, CX1=736, DMIN=-320, DMAX=230;
+  function X(d){ return CX0+(d-DMIN)/(DMAX-DMIN)*(CX1-CX0); }
+  var rowY=[84,114,144, 200,228,256,284,312,340,368];
+  var marks=[], ghosts=[], arrows=[];
+
+  (function build(){
+    var svg=$('chart'), s='';
+    s+='<defs><marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--lam)"/></marker>'
+      +'<marker id="an" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--warn)"/></marker></defs>';
+    // bands
+    s+='<rect x="'+CX0+'" y="70" width="'+(CX1-CX0)+'" height="88" fill="var(--bg-alt)" opacity=".55"/>';
+    s+='<rect x="'+CX0+'" y="186" width="'+(CX1-CX0)+'" height="196" fill="var(--bg-alt)" opacity=".3"/>';
+    s+='<text x="'+CX0+'" y="62" font-size="11" font-weight="600" fill="var(--ink-faint)">DMControl &middot; 300k</text>';
+    s+='<text x="'+CX0+'" y="178" font-size="11" font-weight="600" fill="var(--ink-faint)">HumanoidBench h1 &middot; 2M</text>';
+    // gridlines
+    [-300,-200,-100,0,100,200].forEach(function(t){
+      var z=(t===0);
+      s+='<line x1="'+X(t).toFixed(1)+'" y1="68" x2="'+X(t).toFixed(1)+'" y2="390" stroke="'+(z?'var(--ink-faint)':'var(--border-soft)')+'" stroke-width="'+(z?1.3:1)+'"/>';
+      s+='<text x="'+X(t).toFixed(1)+'" y="410" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)" font-family="var(--mono)">'+(t>0?'+':'')+t+'</text>';
+    });
+    s+='<text x="'+((CX0+CX1)/2)+'" y="434" text-anchor="middle" font-size="11.5" fill="var(--ink-faint)">effect of the planner on final return</text>';
+    s+='<text x="'+X(0)+'" y="36" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)">no effect</text>';
+    B.forEach(function(b,i){
+      var y=rowY[i];
+      s+='<text x="152" y="'+(y+4)+'" text-anchor="end" font-size="12" fill="var(--ink)" font-family="var(--mono)">'+b.t+'</text>';
+      s+='<line x1="'+CX0+'" y1="'+y+'" x2="'+CX1+'" y2="'+y+'" stroke="var(--border-soft)" stroke-width=".7"/>';
+    });
+    svg.innerHTML=s;
+    // interactive layer
+    B.forEach(function(b,i){
+      var y=rowY[i];
+      var ar=el('line',{x1:X(b.d1),y1:y,x2:X(b.dl),y2:y,stroke:b.it>=0?'var(--lam)':'var(--warn)','stroke-width':2,'marker-end':b.it>=0?'url(#ap)':'url(#an)','class':'ar'});
+      var gh=el('circle',{cx:X(b.d1),cy:y,r:5,fill:'var(--raise)',stroke:'var(--base)','stroke-width':2,'class':'gh'});
+      var mk=el('circle',{cx:X(b.dl),cy:y,r:6,fill:'var(--lam)',stroke:'var(--raise)','stroke-width':1.5,'class':'mk'});
+      var hit=el('rect',{x:0,y:y-13,width:760,height:26,fill:'transparent','class':'row-hit',tabindex:0,role:'button','aria-label':'Show the four runs behind '+b.t});
+      hit.addEventListener('click',function(){ st.sel=i; detail(); });
+      hit.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){e.preventDefault();st.sel=i;detail();} });
+      svg.appendChild(ar); svg.appendChild(gh); svg.appendChild(mk); svg.appendChild(hit);
+      arrows.push(ar); ghosts.push(gh); marks.push(mk);
+    });
+  })();
+
+  function chart(){
+    var m=st.mode;
+    B.forEach(function(b,i){
+      var toLam=(m!=='base');
+      marks[i].setAttribute('cx',X(toLam?b.dl:b.d1));
+      marks[i].setAttribute('fill', toLam?'var(--lam)':'var(--raise)');
+      marks[i].setAttribute('stroke', toLam?'var(--raise)':'var(--base)');
+      marks[i].setAttribute('stroke-width', toLam?1.5:2);
+      ghosts[i].style.opacity = (m==='both')?1:0;
+      arrows[i].style.opacity = (m==='both')?1:0;
+    });
+    var t=$('tally'), v=$('verdict');
+    if(m==='base'){
+      t.innerHTML='positive on <b>'+P1+' of 10</b> blocks &middot; <span class="m">p='+Pv1.toFixed(3)+'</span>';
+      v.innerHTML='With the critic trained on the 1-step target, adding the tensor planner lowers '+
+        'final return on nine of ten blocks. The exception is <span class="m">acrobot-swingup</span>.';
+      $('cap').innerHTML='Open marks show the planner’s effect when the critic is trained on the '+
+        'reference 1-step target. Marks left of the zero line are tasks where the planner lowered return.';
+    } else if(m==='lam'){
+      t.innerHTML='positive on <b>'+PL+' of 10</b> blocks';
+      v.innerHTML='Here the critic is trained on a TD(λ) target, with the planner, schedule, seeds '+
+        'and evaluation unchanged. The number of blocks where the planner helps goes from '+P1+' to '+PL+'.';
+      $('cap').innerHTML='Filled marks show the planner’s effect when the critic is regressed onto a '+
+        'TD(λ) return over the transitions the planner actually collected.';
+    } else {
+      t.innerHTML='paired difference positive on <b>'+PI+' of 10</b> &middot; <span class="m">p='+PvI.toFixed(3)+'</span>';
+      v.innerHTML='Each arrow runs from the planner’s effect under the 1-step target to its effect '+
+        'under TD(λ). Eight of ten point right. The two that point left, <span class="m">run</span> '+
+        'and <span class="m">walk</span>, are drawn in red.';
+      $('cap').innerHTML='Open mark: the planner’s effect under the 1-step target. Filled mark: its '+
+        'effect under the TD(λ) target. Arrow: the interaction between them. Both planners in a block '+
+        'share their model initialization.';
+    }
+  }
+
+  /* ---------- 03 detail ---------- */
+  function detail(){
+    var b=B[st.sel], lab=['TD-MPC2','+ planner','+ λ','TD-MTP'];
+    var best=b.v.indexOf(Math.max.apply(null,b.v));
+    $('tt').textContent=b.t+'  ·  n = '+b.n+' seeds';
+    $('quad').innerHTML=b.v.map(function(v,i){
+      return '<div class="q'+(i===best?' best':'')+'"><div class="lab">'+lab[i]+'</div>'+
+             '<div class="val">'+v.toFixed(1)+'</div><div class="sd">± '+b.sd[i]+'</div></div>';}).join('');
+    var f=function(x){return (x>0?'+':'')+x.toFixed(1);};
+    $('deltas').innerHTML=
+      '<div class="cell"><div class="k">planner, under 1-step</div><div class="v" style="color:var(--base)">'+f(b.d1)+'</div><div class="n">+ planner minus TD-MPC2</div></div>'+
+      '<div class="cell"><div class="k">planner, given λ</div><div class="v" style="color:var(--lam)">'+f(b.dl)+'</div><div class="n">TD-MTP minus + λ</div></div>'+
+      '<div class="cell"><div class="k">interaction</div><div class="v" style="color:'+(b.it>=0?'var(--lam)':'var(--warn)')+'">'+f(b.it)+'</div><div class="n">'+(b.it/SUM*100).toFixed(0)+'% of the total</div></div>';
+    var s;
+    if(b.t==='stair'){
+      s='This block contributes the largest share of the interaction. Each change alone finishes '+
+        'below the baseline ('+b.v[1].toFixed(0)+' with the planner, '+b.v[2].toFixed(0)+
+        ' with the TD(λ) target, against '+b.v[0].toFixed(0)+'), and together they reach '+b.v[3].toFixed(0)+'.';
+    } else if(b.t==='acrobot-swingup'){
+      s='This is the only block where the planner helps under both targets, and it helps more '+
+        'under TD(λ) ('+f(b.d1)+' under the 1-step target, '+f(b.dl)+' under TD(λ)). Cross-seed spread also falls, from '+
+        b.sd[0]+' on the baseline to '+b.sd[3]+' on the full system.';
+    } else if(b.it<0){
+      s='This is one of the two blocks where the TD(λ) target does not improve the planner’s '+
+        'contribution. Both changes are small relative to cross-seed spread, and the paper counts '+
+        'this block as a loss.';
+    } else {
+      s='The planner’s effect moves from '+f(b.d1)+' under the 1-step target to '+f(b.dl)+' under TD(λ)'+
+        (b.dl>0?', changing from a loss to a gain.':', which is still a loss but a smaller one.');
+    }
+    $('story').innerHTML=s;
+    marks.forEach(function(m,i){ m.setAttribute('r', i===st.sel?7.5:6); });
+    ghosts.forEach(function(g,i){ g.setAttribute('r', i===st.sel?6.5:5); });
+  }
+
+  /* ---------- 04 share ---------- */
+  (function(){
+    var sorted=B.slice().sort(function(a,b){return b.it-a.it;});
+    var pos=sorted.filter(function(b){return b.it>0;});
+    var x=CX0-100, W=CX1-CX0+100, acc=0, s='';
+    var posSum=pos.reduce(function(a,b){return a+b.it;},0);
+    pos.forEach(function(b,i){
+      var w=b.it/posSum*W, hot=(b.t==='stair'||b.t==='pole');
+      s+='<rect x="'+(x+acc).toFixed(1)+'" y="40" width="'+Math.max(w-1.5,1).toFixed(1)+'" height="42" rx="3" fill="'+(hot?'var(--lam)':'var(--lam-wash)')+'" stroke="var(--lam)" stroke-width="'+(hot?0:1)+'"/>';
+      if(w>52) s+='<text x="'+(x+acc+w/2).toFixed(1)+'" y="66" text-anchor="middle" font-size="11.5" font-weight="600" fill="'+(hot?'var(--bg)':'var(--lam)')+'" font-family="var(--mono)">'+b.t+'</text>';
+      acc+=w;
+    });
+    var two=(B[3].it+B[4].it)/posSum*W;
+    s+='<line x1="'+x+'" y1="94" x2="'+(x+two).toFixed(1)+'" y2="94" stroke="var(--ink)" stroke-width="1.5"/>';
+    s+='<line x1="'+x+'" y1="90" x2="'+x+'" y2="98" stroke="var(--ink)" stroke-width="1.5"/>';
+    s+='<line x1="'+(x+two).toFixed(1)+'" y1="90" x2="'+(x+two).toFixed(1)+'" y2="98" stroke="var(--ink)" stroke-width="1.5"/>';
+    s+='<text x="'+(x+two/2).toFixed(1)+'" y="114" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">stair + pole = '+((B[3].it+B[4].it)/SUM*100).toFixed(0)+'% of the summed interaction</text>';
+    s+='<text x="'+x+'" y="30" font-size="11" fill="var(--ink-faint)">each block’s share of the positive interaction, largest first</text>';
+    $('share').innerHTML=s;
+    $('share-cap').innerHTML='Summed across all ten blocks the interaction is '+SUM.toFixed(0)+
+      ' return units, of which <span class="m">stair</span> and <span class="m">pole</span> supply '+
+      (B[3].it+B[4].it).toFixed(0)+'. The baseline handles both tasks poorly, and the paper’s gains '+
+      'are generally concentrated on such tasks. This is an observation about which tasks moved; '+
+      'we did not test a relationship between effect size and task difficulty.';
+  })();
+
+  function setMode(m){
+    st.mode=m;
+    [['base','t-base'],['lam','t-lam'],['both','t-both']].forEach(function(p){
+      $(p[1]).setAttribute('aria-pressed', String(m===p[0])); });
+    chart();
+  }
+  $('t-base').addEventListener('click',function(){setMode('base');});
+  $('t-lam').addEventListener('click',function(){setMode('lam');});
+  $('t-both').addEventListener('click',function(){setMode('both');});
+
+  setMode('both'); detail();
+})();
+</script>

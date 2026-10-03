@@ -1,0 +1,358 @@
+<title>What a Finite Graph Can Reach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --ink:#363636; --body:#4a4a4a; --muted:#7a7a7a; --faint:#b5b5b5;
+  --line:#dbdbdb; --line-soft:#ededed; --panel:#f5f5f5;
+  --link:#3273dc; --link-hover:#363636;
+  --in:#0F766E; --in-wash:rgba(15,118,110,.12); --in-mid:rgba(15,118,110,.38);
+  --out:#3D5A80; --out-wash:rgba(61,90,128,.12);
+  --warn:#b5453c; --warn-wash:rgba(181,69,60,.10);
+  --sans:'Google Sans','Noto Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+  --col:960px; --r:10px;
+  --ink-soft:var(--body); --ink-faint:var(--muted);
+  --border:var(--line); --border-soft:var(--line-soft); --bg-alt:var(--panel);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#fff;color:var(--body);font-family:var(--sans);font-size:16px;
+  line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:var(--col);margin:0 auto;padding:0 24px 4rem}
+h1,h2,h3{font-family:var(--sans);font-weight:600;color:var(--ink);margin:0;text-wrap:balance}
+h1{font-size:clamp(1.9rem,4.2vw,2.8rem);line-height:1.15;letter-spacing:-.01em;max-width:none}
+h2{font-size:2rem;line-height:1.2;text-align:center;margin:0 0 .5rem}
+h3{font-size:1.5rem}
+p{margin:1rem 0}
+a{color:var(--link);text-decoration:none} a:hover{color:var(--link-hover);text-decoration:underline}
+strong,b{font-weight:600;color:var(--ink)}
+.m{font-family:var(--mono);font-size:.88em;color:var(--out);white-space:nowrap}
+.hero{text-align:center;padding:3.5rem 0 0;border:0;margin:0 0 1rem}
+.eyebrow{font-size:.72rem;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 1rem}
+.lede{font-size:1.2rem;line-height:1.55;color:var(--body);margin:1.2rem auto 0;max-width:720px}
+section{padding:3rem 0 0;margin:0}
+.act{font-size:.72rem;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 .5rem;text-align:center}
+.sub{color:var(--body);font-size:1rem;margin:0 auto 1.4rem;max-width:760px;text-align:center}
+.copy{max-width:760px;margin:0 auto}
+.panel{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px 16px 14px}
+.scroller{overflow-x:auto}
+svg{display:block;width:100%;height:auto}
+figure{margin:1.6rem 0 0;text-align:center}
+figcaption{font-size:14px;line-height:1.55;color:var(--muted);margin-top:.9rem;padding-top:.8rem;
+  border-top:1px solid var(--line-soft);text-align:left}
+.ctl{display:flex;flex-wrap:wrap;gap:18px 26px;align-items:flex-end;margin:0 0 1rem;justify-content:center}
+.ctl label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted);font-weight:500}
+.ctl input[type=range]{width:186px;accent-color:var(--in)}
+.ctl .v{font-family:var(--mono);font-size:1rem;color:var(--ink);font-variant-numeric:tabular-nums}
+.read{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;margin:1.2rem 0 0;
+  background:none;border:0;border-radius:0;overflow:visible}
+.read>div{background:var(--panel);border-radius:var(--r);padding:1rem;text-align:center}
+.read .k{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.read .n{font-family:var(--sans);font-size:1.7rem;font-weight:600;margin-top:.3rem;color:var(--ink);
+  font-variant-numeric:tabular-nums}
+.eq{font-family:var(--mono);font-size:13.5px;background:var(--panel);border-radius:var(--r);
+  padding:14px 16px;margin:0 auto 1rem;overflow-x:auto;color:var(--body);max-width:760px}
+.eq b{color:var(--ink);font-weight:600}
+.note{background:var(--panel);border-left:3px solid var(--in);border-radius:var(--r);
+  padding:.9rem 1.1rem;font-size:15px;margin:1.2rem auto 0;max-width:760px}
+.note.bad{border-left-color:var(--warn)}
+ul.plain{margin:0 auto;padding-left:1.2em;color:var(--body);font-size:15px;max-width:760px}
+ul.plain li{margin-bottom:.55em}
+.foot{border-top:1px solid var(--line);margin:3rem auto 0;padding-top:1.4rem;font-size:13.5px;
+  color:var(--muted);max-width:760px}
+button.mini{font-family:var(--sans);font-size:13.5px;padding:8px 15px;border:1px solid var(--line);
+  border-radius:6px;background:#fff;color:var(--body);cursor:pointer}
+button.mini:hover{border-color:var(--muted)}
+button.mini:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+.key{display:flex;flex-wrap:wrap;gap:15px;justify-content:center;margin-top:.9rem;font-size:13.5px;color:var(--muted)}
+.key i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;font-style:normal}
+@media (max-width:620px){h2{font-size:1.6rem} .ctl input[type=range]{width:100%} .ctl label{width:100%} body{font-size:15px}}
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">TD-MTP &middot; Proposition 2</p>
+  <h1>What a finite graph can reach</h1>
+  <p class="lede">The structured planner builds a candidate by picking one control point per
+  layer and interpolating between them. Whether a candidate can land in a given region of action
+  space depends on which control points the graph holds, and drawing more paths does not change
+  that.</p>
+</header>
+
+<!-- 01 -->
+<section>
+  <p class="act">01 &middot; how a candidate is built</p>
+  <h2>One node per layer, then interpolate</h2>
+  <p class="sub">The graph holds <span class="m">M = 3</span> layers of <span class="m">N = 16</span>
+  control points. A path picks an index independently in each layer and the interpolation matrix
+  <span class="m">&Phi;</span> turns those points into <span class="m">H = 3</span> actions. Every
+  row of <span class="m">&Phi;</span> is non-negative and sums to one, so each action is a weighted
+  average of the points the path chose.</p>
+  <figure class="panel">
+    <div class="scroller"><svg id="g1" viewBox="0 0 700 260" role="img"
+      aria-label="Three layers of sixteen control points. A path selects one point per layer and the interpolation matrix maps them to three actions; at H equals M equals three the third layer carries no weight."></svg></div>
+    <div class="eq">a<sub>0</sub> = U<sub>1</sub> &nbsp;&nbsp; a<sub>1</sub> = &frac12;(U<sub>1</sub> + U<sub>2</sub>) &nbsp;&nbsp; a<sub>2</sub> = U<sub>2</sub>
+      &nbsp;&nbsp;&nbsp; &Phi; rows = <b>(1, 0, 0)</b>, <b>(&frac12;, &frac12;, 0)</b>, <b>(0, 1, 0)</b></div>
+    <figcaption>At the reported setting the third layer gets zero weight in every row, so it is
+    drawn but never used. As a result the <span class="m">16&sup3; = 4096</span> paths collapse to at
+    most <span class="m">16&sup2; = 256</span> distinct action sequences, and the middle action is
+    always the midpoint of the two endpoints.</figcaption>
+  </figure>
+</section>
+
+<!-- 02 -->
+<section>
+  <p class="act">02 &middot; the event</p>
+  <h2>A sufficient condition for landing in a region</h2>
+  <div class="copy">
+  <p>Take a box <span class="m">A</span> in action space and consider sequences whose actions all
+  lie inside it. If every control point a path selects is in <span class="m">A</span>, every
+  interpolated action is in <span class="m">A</span> as well, because each action is a convex
+  combination of those points and a box is convex.</p>
+  <p>Layers are chosen independently, so the probability of this sufficient event is the product
+  of the per-layer fractions.</p>
+  </div>
+  <div class="eq" style="margin-top:18px">q<sub>m</sub> = (nodes of layer m inside A) / N
+    &nbsp;&nbsp;&nbsp; p<sub>C</sub> = &prod;<sub>m active</sub> q<sub>m</sub>
+    &nbsp;&nbsp;&nbsp; <b>Pr(at least one of n paths lands in the region) &ge; 1 &minus; (1 &minus; p<sub>C</sub>)<sup>n</sup></b></div>
+</section>
+
+<!-- 03 -->
+<section>
+  <p class="act">03 &middot; interactive bound</p>
+  <h2>The bound against simulated paths</h2>
+  <p class="sub">Set how many of each layer&rsquo;s sixteen points fall inside the region and how
+  many paths the planner draws this iteration. The bound is a lower bound on the probability of at
+  least one hit. The simulation draws that many paths from a graph with this arrangement and counts
+  how many land inside.</p>
+  <figure class="panel">
+    <div class="ctl">
+      <label>points of layer 1 in A<input id="k1" type="range" min="0" max="16" value="6"><span class="v" id="k1v">6 / 16</span></label>
+      <label>points of layer 2 in A<input id="k2" type="range" min="0" max="16" value="5"><span class="v" id="k2v">5 / 16</span></label>
+      <label>paths drawn this iteration<input id="np" type="range" min="0" max="80" value="24"><span class="v" id="npv">24</span></label>
+      <button class="mini" id="resample">resample</button>
+    </div>
+    <div class="scroller"><svg id="g2" viewBox="0 0 700 210" role="img"
+      aria-label="Sampled paths drawn from the graph, with those landing entirely inside the target region highlighted."></svg></div>
+    <div class="read">
+      <div><div class="k">p<sub>C</sub> = q&#8321;q&#8322;</div><div class="n" id="pc">&mdash;</div></div>
+      <div><div class="k">bound on Pr(&ge;1 hit)</div><div class="n" id="pb" style="color:var(--in)">&mdash;</div></div>
+      <div><div class="k">expected hits &ge;</div><div class="n" id="ez">&mdash;</div></div>
+      <div><div class="k">simulated hits</div><div class="n" id="obs">&mdash;</div></div>
+    </div>
+    <figcaption id="cap3">The simulated count comes from a single draw and varies around the expected
+    value. The bound on the probability of at least one hit holds for any arrangement of points with
+    these per-layer counts.</figcaption>
+  </figure>
+</section>
+
+<!-- 04 -->
+<section>
+  <p class="act">04 &middot; the case H = M = 3</p>
+  <h2>The bound is exact at the reported setting</h2>
+  <div class="copy">
+  <p>With <span class="m">H = M = 3</span> the only actions produced are
+  <span class="m">U<sub>1</sub></span>, the midpoint, and <span class="m">U<sub>2</sub></span>.
+  If both endpoints are inside the box, the midpoint is too. If either endpoint is outside, it is
+  itself one of the actions, so the sequence is already outside. The sufficient event is therefore
+  also necessary, and the inequality holds with equality.</p>
+  <p>This does not hold in general. If a third layer has some weight, a path can enter the region
+  even when the point it picks in one active layer lies outside, because a small weight on that
+  point can be offset by the others. The product then underestimates the probability, and when any
+  active <span class="m">q<sub>m</sub></span> is zero the bound is zero even though some paths
+  reach the region.</p>
+  </div>
+  <div class="note">A numerical check over 600 random graphs, enumerating every path instead of
+  sampling, found no violation of the bound, exact equality in every
+  <span class="m">H = M = 3</span> case, and 76 of the 600 general cases where the bound is zero
+  but some paths reach the region.</div>
+</section>
+
+<!-- 05 -->
+<section>
+  <p class="act">05 &middot; computing q<sub>m</sub></p>
+  <h2><span class="m">q<sub>m</sub></span> must be computed from whole points</h2>
+  <p class="sub">The fractions count whole control points. Computing a fraction for each
+  coordinate and multiplying them gives the wrong value, as the two-point example below
+  shows.</p>
+  <figure class="panel">
+    <div class="scroller"><svg id="g3" viewBox="0 0 700 300" role="img"
+      aria-label="Two control points at minus one comma one and one comma minus one, with the target box covering the lower-left quadrant. Each coordinate has half its values inside the box, but neither whole point is inside."></svg></div>
+    <div class="read">
+      <div><div class="k">coordinate 1 inside</div><div class="n">1 / 2</div></div>
+      <div><div class="k">coordinate 2 inside</div><div class="n">1 / 2</div></div>
+      <div><div class="k">product of marginals</div><div class="n" style="color:var(--out)">0.25</div></div>
+      <div><div class="k">actual q<sub>m</sub></div><div class="n" style="color:var(--warn)">0.00</div></div>
+    </div>
+    <figcaption>Each coordinate has half its values inside the box, so the per-coordinate product
+    predicts that a quarter of the points are inside, but neither point is. The permutations used to
+    build the grid make coordinates independent at construction time, which says nothing about the
+    points of the one fixed graph that paths are sampled from.</figcaption>
+  </figure>
+</section>
+
+<!-- 06 -->
+<section>
+  <p class="act">06 &middot; scope</p>
+  <h2>What the proposition does not cover</h2>
+  <ul class="plain">
+    <li>It concerns proposals before scoring. It says nothing about which candidate the elite fit
+    selects, what the agent executes, or whether learning improves.</li>
+    <li>The region need not relate to the task. It is any box in action space, which may be
+    infeasible under the dynamics or not worth reaching.</li>
+    <li>The count <span class="m">n</span> is the number of tensor candidates drawn at that
+    iteration, and the schedule takes it to zero at the midpoint of training. From then on the bound
+    is <span class="m">1 &minus; (1 &minus; p)<sup>0</sup> = 0</span> because the mechanism it
+    describes is switched off.</li>
+    <li>Coverage does not imply benefit. A structured proposal imposes a temporal constraint that
+    can help search or exclude useful sequences, and the paper&rsquo;s own controls measure the
+    isolated contribution of these proposals at <span class="m">&minus;14.6</span>, with an interval
+    that contains zero.</li>
+  </ul>
+  <div class="note bad">This page replaces an earlier explainer built on a proposition about
+  reaching a second basin. That proposition is not in the current manuscript. The one shown here
+  replaced it and makes a considerably weaker claim.</div>
+</section>
+
+<p class="foot">Numbers and statements follow the manuscript&rsquo;s Appendix B, checked against the
+26 September draft. The simulation samples from a grid instead of replaying stored results, so
+the counts change on every resample. Under review at ICLR 2027; no code is released.</p>
+
+</div>
+
+<script>
+(function(){
+  var N = 16, SEEDLESS = Math.random;
+
+  // ---------- 01: graph diagram ----------
+  function drawGraph(){
+    var s = document.getElementById('g1'), W = 700, out = [];
+    var layers = [{y:52,lab:'layer 1',act:true},{y:126,lab:'layer 2',act:true},{y:200,lab:'layer 3',act:false}];
+    var x0 = 132, x1 = 470;
+    var pick = [5, 11, 8];
+    layers.forEach(function(L,mi){
+      out.push('<text x="'+(x0-16)+'" y="'+(L.y+4)+'" font-size="11.5" text-anchor="end" fill="'+(L.act?'var(--ink)':'var(--ink-faint)')+'" font-family="var(--mono)">'+L.lab+'</text>');
+      if(!L.act) out.push('<text x="'+(x0-16)+'" y="'+(L.y+19)+'" font-size="9.5" text-anchor="end" fill="var(--ink-faint)">zero weight</text>');
+      for(var j=0;j<N;j++){
+        var x = x0 + j*(x1-x0)/(N-1);
+        var on = (j===pick[mi]);
+        var r = on ? 5.6 : 3.2;
+        var fill = !L.act ? 'var(--border)' : (on ? 'var(--in)' : 'var(--in-mid)');
+        out.push('<circle cx="'+x.toFixed(1)+'" cy="'+L.y+'" r="'+r+'" fill="'+fill+'"'+(L.act?'':' opacity=".6"')+'/>');
+      }
+    });
+    // the chosen path
+    var px = function(mi){ return x0 + pick[mi]*(x1-x0)/(N-1); };
+    out.push('<path d="M'+px(0).toFixed(1)+' 52 L'+px(1).toFixed(1)+' 126" stroke="var(--in)" stroke-width="2" fill="none"/>');
+    out.push('<path d="M'+px(1).toFixed(1)+' 126 L'+px(2).toFixed(1)+' 200" stroke="var(--border)" stroke-width="2" fill="none" stroke-dasharray="4 3"/>');
+    // resulting actions
+    var ax = 566;
+    out.push('<text x="'+ax+'" y="30" font-size="11" fill="var(--ink-soft)">actions</text>');
+    [['a₀ = U₁',52,'var(--in)'],['a₁ = ½(U₁+U₂)',126,'var(--in)'],['a₂ = U₂',200,'var(--in)']].forEach(function(t){
+      out.push('<circle cx="'+ax+'" cy="'+t[1]+'" r="5" fill="'+t[2]+'"/>');
+      out.push('<text x="'+(ax+13)+'" y="'+(t[1]+4)+'" font-size="11" fill="var(--ink)" font-family="var(--mono)">'+t[0]+'</text>');
+    });
+    out.push('<path d="M'+(x1+16)+' 126 L'+(ax-14)+' 126" stroke="var(--ink-faint)" stroke-width="1" marker-end="url(#ar)"/>');
+    out.push('<defs><marker id="ar" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><polygon points="0 0, 7 3.5, 0 7" fill="var(--ink-faint)"/></marker></defs>');
+    out.push('<text x="'+((x1+ax)/2)+'" y="118" font-size="10" text-anchor="middle" fill="var(--ink-faint)">&#934;</text>');
+    s.innerHTML = out.join('');
+  }
+
+  // ---------- 03: live bound ----------
+  var k1El=document.getElementById('k1'), k2El=document.getElementById('k2'), npEl=document.getElementById('np');
+  function update(resample){
+    var k1=+k1El.value, k2=+k2El.value, n=+npEl.value;
+    document.getElementById('k1v').textContent = k1+' / 16';
+    document.getElementById('k2v').textContent = k2+' / 16';
+    document.getElementById('npv').textContent = n;
+    var q1=k1/N, q2=k2/N, pc=q1*q2;
+    var bound = n===0 ? 0 : 1-Math.pow(1-pc,n);
+    document.getElementById('pc').textContent = pc.toFixed(4);
+    document.getElementById('pb').textContent = (bound*100).toFixed(1)+'%';
+    document.getElementById('ez').textContent = (n*pc).toFixed(2);
+
+    // simulate n paths on a graph whose first k nodes of each layer are inside A
+    var hits=0, marks=[];
+    for(var i=0;i<n;i++){
+      var j1=Math.floor(Math.random()*N), j2=Math.floor(Math.random()*N);
+      var hit = (j1<k1) && (j2<k2);          // exact at H=M=3: both endpoints inside
+      if(hit) hits++;
+      marks.push(hit);
+    }
+    document.getElementById('obs').textContent = hits+' / '+n;
+    document.getElementById('obs').style.color = hits>0 ? 'var(--in)' : 'var(--ink-faint)';
+
+    // draw the paths
+    var out=[], W=700, cols=20, r=7.5, x0=26, y0=34, gx=33, gy=30;
+    var rows=Math.max(1,Math.ceil(n/cols)), H=y0+rows*gy+8;
+    document.getElementById('g2').setAttribute('viewBox','0 0 '+W+' '+H);
+    out.push('<text x="'+x0+'" y="18" font-size="10.5" fill="var(--ink-faint)">each mark is one sampled path &#183; filled = whole sequence inside the region</text>');
+    for(var i=0;i<n;i++){
+      var cx=x0+(i%cols)*gx+r, cy=y0+Math.floor(i/cols)*gy+r;
+      if(marks[i]) out.push('<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="var(--in)"/>');
+      else out.push('<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="var(--border)" stroke-width="1.6"/>');
+    }
+    if(n===0) out.push('<text x="'+x0+'" y="60" font-size="12" fill="var(--warn)" font-family="var(--mono)">no tensor candidates drawn &#183; the bound is zero</text>');
+    document.getElementById('g2').innerHTML = out.join('');
+
+    var cap = document.getElementById('cap3');
+    if(n===0){
+      cap.innerHTML = 'After the midpoint of training the schedule sets the tensor candidate count to zero, so <span class="m">1 &minus; (1 &minus; p)<sup>0</sup> = 0</span> and the proposition says nothing about what the planner can reach.';
+    } else if(pc===0){
+      cap.innerHTML = 'One of the active layers has no point inside the region, so the product and the bound are both zero. At <span class="m">H = M = 3</span> this is also the exact probability, and the simulation finds no hits, because an endpoint outside the box is itself an action outside the box.';
+    } else {
+      cap.innerHTML = 'The simulated count comes from a single draw and varies around the expected value. The bound on the probability of at least one hit holds for any arrangement of points with these per-layer counts.';
+    }
+  }
+
+  // ---------- 05: the coordinate trap ----------
+  function drawTrap(){
+    var s=document.getElementById('g3');
+    var sz=200, ox=250, oy=58;
+    var X=function(v){ return ox+(v+1)/2*sz; }, Y=function(v){ return oy+(1-v)/2*sz; };
+    var o=[];
+    // target box, drawn first
+    o.push('<rect x="'+X(-1)+'" y="'+Y(0)+'" width="'+(sz/2)+'" height="'+(sz/2)+'" fill="var(--in-wash)" stroke="var(--in)" stroke-width="1.5"/>');
+    o.push('<text x="'+X(-0.5)+'" y="'+(Y(-0.5)+4)+'" font-size="12" text-anchor="middle" fill="var(--in)" font-family="var(--mono)">A = [&minus;1,0]&sup2;</text>');
+    // frame + axes
+    o.push('<rect x="'+ox+'" y="'+oy+'" width="'+sz+'" height="'+sz+'" fill="none" stroke="var(--border)"/>');
+    o.push('<line x1="'+ox+'" y1="'+Y(0)+'" x2="'+(ox+sz)+'" y2="'+Y(0)+'" stroke="var(--border-soft)"/>');
+    o.push('<line x1="'+X(0)+'" y1="'+oy+'" x2="'+X(0)+'" y2="'+(oy+sz)+'" stroke="var(--border-soft)"/>');
+    // the two control points, labels pushed inward so they stay in frame
+    o.push('<circle cx="'+X(-1)+'" cy="'+Y(1)+'" r="7" fill="var(--warn)"/>');
+    o.push('<text x="'+(X(-1)+13)+'" y="'+(Y(1)-9)+'" font-size="11.5" fill="var(--ink)" font-family="var(--mono)">(&minus;1, 1)</text>');
+    o.push('<circle cx="'+X(1)+'" cy="'+Y(-1)+'" r="7" fill="var(--warn)"/>');
+    o.push('<text x="'+(X(1)-13)+'" y="'+(Y(-1)+20)+'" font-size="11.5" fill="var(--ink)" text-anchor="end" font-family="var(--mono)">(1, &minus;1)</text>');
+    // coordinate-1 rail, below the frame
+    var ry=oy+sz+26;
+    o.push('<line x1="'+ox+'" y1="'+ry+'" x2="'+(ox+sz)+'" y2="'+ry+'" stroke="var(--border)"/>');
+    o.push('<rect x="'+X(-1)+'" y="'+(ry-5)+'" width="'+(sz/2)+'" height="10" fill="var(--in-wash)"/>');
+    o.push('<circle cx="'+X(-1)+'" cy="'+ry+'" r="5" fill="var(--in)"/>');
+    o.push('<circle cx="'+X(1)+'" cy="'+ry+'" r="5" fill="var(--out)"/>');
+    o.push('<text x="'+(ox+sz/2)+'" y="'+(ry+20)+'" font-size="10.5" text-anchor="middle" fill="var(--ink-faint)">coordinate 1 &#183; one of two inside</text>');
+    // coordinate-2 rail, left of the frame
+    var rx=ox-30;
+    o.push('<line x1="'+rx+'" y1="'+oy+'" x2="'+rx+'" y2="'+(oy+sz)+'" stroke="var(--border)"/>');
+    o.push('<rect x="'+(rx-5)+'" y="'+Y(0)+'" width="10" height="'+(sz/2)+'" fill="var(--in-wash)"/>');
+    o.push('<circle cx="'+rx+'" cy="'+Y(-1)+'" r="5" fill="var(--in)"/>');
+    o.push('<circle cx="'+rx+'" cy="'+Y(1)+'" r="5" fill="var(--out)"/>');
+    o.push('<text x="'+(rx-10)+'" y="'+(oy+sz/2)+'" font-size="10.5" text-anchor="middle" fill="var(--ink-faint)" transform="rotate(-90 '+(rx-10)+' '+(oy+sz/2)+')">coordinate 2 &#183; one of two inside</text>');
+    // verdict panel on the right
+    var tx=ox+sz+30;
+    o.push('<text x="'+tx+'" y="'+(oy+66)+'" font-size="11.5" fill="var(--ink-soft)">per coordinate</text>');
+    o.push('<text x="'+tx+'" y="'+(oy+84)+'" font-size="13" fill="var(--in)" font-family="var(--mono)">&frac12; &times; &frac12; = &frac14;</text>');
+    o.push('<text x="'+tx+'" y="'+(oy+118)+'" font-size="11.5" fill="var(--ink-soft)">whole points</text>');
+    o.push('<text x="'+tx+'" y="'+(oy+136)+'" font-size="13" fill="var(--warn)" font-family="var(--mono)">0 of 2</text>');
+    s.setAttribute('viewBox','0 0 700 '+(ry+34));
+    s.innerHTML=o.join('');
+  }
+
+  drawGraph(); drawTrap(); update(true);
+  [k1El,k2El,npEl].forEach(function(e){ e.addEventListener('input', function(){ update(true); }); });
+  document.getElementById('resample').addEventListener('click', function(){ update(true); });
+})();
+</script>

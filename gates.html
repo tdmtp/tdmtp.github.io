@@ -1,0 +1,483 @@
+<title>Termination and Truncation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#fff; --bg-alt:#f5f5f5; --raise:#fff;
+  --ink:#363636; --ink-soft:#4a4a4a; --ink-faint:#7a7a7a;
+  --border:#dbdbdb; --border-soft:#ededed;
+  --link:#3273dc;
+  --rw:#0F766E;  --rw-wash:rgba(15,118,110,.12);
+  --bs:#3D5A80;  --bs-wash:rgba(61,90,128,.12);
+  --warn:#b5453c; --warn-wash:rgba(181,69,60,.10);
+  --serif:'Google Sans','Noto Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --sans:'Google Sans','Noto Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px;padding-block:52px 72px;}
+h1,h2,h3{font-family:var(--serif);font-weight:600;text-wrap:balance;margin:0;}
+h1{font-size:2.45rem;line-height:1.13;letter-spacing:-.013em;}
+h2{font-size:1.52rem;line-height:1.25;}
+h3{font-size:1rem;}
+p{margin:0 0 1em;}
+.m{font-family:var(--mono);font-size:.93em;font-variant-numeric:tabular-nums;}
+strong{font-weight:600;}
+
+.eyebrow{font-size:.74rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;margin:0 0 14px;}
+header{border-bottom:1px solid var(--border);padding-bottom:30px;margin-bottom:42px;}
+.thesis{font-family:var(--serif);font-size:1.19rem;line-height:1.52;color:var(--ink-soft);margin:20px 0 0;max-width:60ch;}
+
+section{margin-bottom:52px;}
+.act{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;}
+.act .num{font-family:var(--mono);font-size:.76rem;color:var(--ink-faint);letter-spacing:.06em;padding-top:2px;}
+.sub{color:var(--ink-soft);font-size:.96rem;margin:8px 0 18px;max-width:64ch;}
+.body-copy{max-width:64ch;}
+
+figure{margin:0;}
+.plot{background:var(--raise);border:1px solid var(--border);border-radius:10px;padding:18px 16px 14px;}
+.scroller{overflow-x:auto;}
+svg{display:block;width:100%;height:auto;min-width:560px;}
+figcaption{font-size:.87rem;color:var(--ink-soft);margin-top:14px;padding-top:12px;border-top:1px solid var(--border-soft);line-height:1.55;}
+
+.controls{background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;padding:20px;margin:24px 0 28px;}
+.ctl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;}
+.ctl-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:7px;}
+.ctl label{font-size:.82rem;font-weight:600;}
+.ctl .val{font-family:var(--mono);font-size:.86rem;color:var(--rw);font-weight:600;font-variant-numeric:tabular-nums;}
+input[type=range]{width:100%;margin:0;accent-color:var(--rw);height:22px;}
+.hint{display:block;font-size:.78rem;color:var(--ink-faint);margin-top:7px;line-height:1.45;}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;width:100%;}
+.seg button{flex:1;font-family:var(--sans);font-size:.8rem;font-weight:500;padding:8px 6px;border:0;background:var(--raise);color:var(--ink-soft);cursor:pointer;}
+.seg button+button{border-left:1px solid var(--border);}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg);font-weight:600;}
+.seg button:focus-visible{outline:2px solid var(--rw);outline-offset:-2px;}
+
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:22px 0;}
+.cell{background:var(--raise);padding:15px 16px;}
+.cell .k{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;}
+.cell .v{font-family:var(--mono);font-size:1.26rem;font-weight:600;margin-top:5px;font-variant-numeric:tabular-nums;line-height:1.2;}
+.cell .n{font-size:.76rem;color:var(--ink-faint);margin-top:4px;line-height:1.4;}
+
+.verdict{border-left:3px solid var(--rw);background:var(--bg-alt);padding:16px 20px;border-radius:0 8px 8px 0;font-size:.95rem;margin:22px 0 0;}
+.verdict.no{border-left-color:var(--warn);}
+.verdict strong{display:block;margin-bottom:4px;}
+.aside{background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;padding:18px 20px;font-size:.9rem;color:var(--ink-soft);line-height:1.6;}
+.aside h3{color:var(--ink);margin-bottom:7px;}
+.aside p:last-child{margin-bottom:0;}
+.claims{display:grid;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.claim{background:var(--raise);padding:17px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;}
+.tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap;margin-top:3px;}
+.tag.yes{background:var(--rw-wash);color:var(--rw);}
+.tag.no{background:var(--bs-wash);color:var(--bs);}
+.claim p{margin:0;font-size:.93rem;line-height:1.55;}
+.eq{font-family:var(--mono);font-size:.9rem;background:var(--bg-alt);border:1px solid var(--border);border-radius:8px;padding:14px 16px;overflow-x:auto;line-height:1.85;}
+.rule{border:0;border-top:1px solid var(--border);margin:44px 0;}
+.foot{font-size:.84rem;color:var(--ink-faint);line-height:1.6;max-width:66ch;}
+a{color:var(--rw);}
+@media (max-width:560px){
+  .wrap{padding-block:36px 56px;} h1{font-size:1.92rem;} body{font-size:16px;}
+  .claim{grid-template-columns:1fr;gap:9px;}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">TD-MTP &middot; Proposition 2</p>
+  <h1>Termination and Truncation in the Multi-Step Target</h1>
+  <p class="thesis">TD-MTP's multi-step critic target handles the two ways an episode can end
+  inside a sampled window with two separate gates. This page shows what each gate does to the
+  target and how large the bias is when a truncation is treated as a termination.</p>
+</header>
+
+<!-- 01 -->
+<section>
+  <div class="act"><span class="num">01</span><h2>Windows that cross an episode boundary</h2></div>
+  <p class="sub body-copy">A multi-step target is computed on a window of consecutive
+  transitions. A <em>sequential</em> replay buffer stores episodes back to back and samples
+  fixed-length windows at any offset, so some windows cross an episode boundary. An
+  <em>episodic</em> buffer never returns such a window, which is why <span class="m">n</span>-step
+  implementations built on one do not need to handle this case.</p>
+  <figure class="plot">
+    <div class="scroller"><svg id="buf" viewBox="0 0 760 150" role="img"
+      aria-label="A sequential replay buffer holding two episodes back to back. Three sampled windows are shown: one inside the first episode, one crossing the boundary, one inside the second."></svg></div>
+    <figcaption>Three sampled windows of the same length. The middle one starts in episode A
+    and ends in episode B.</figcaption>
+  </figure>
+</section>
+
+<!-- 02 -->
+<section>
+  <div class="act"><span class="num">02</span><h2>Two ways an episode ends</h2></div>
+  <p class="sub body-copy">TD-MTP builds two gates per transition from the termination flag
+  <span class="m">d</span> and the truncation flag <span class="m">u</span>.</p>
+  <figure class="plot">
+    <div class="scroller"><svg id="ends" viewBox="0 0 760 210" role="img"
+      aria-label="Left: a termination, where the trajectory hits a wall and there is nothing beyond it, so the value of what follows is zero. Right: a truncation, where the trajectory is cut by a time limit but continues beyond the window, so the value of what follows is not zero."></svg></div>
+    <figcaption>In the buffer both appear as the end of an episode. After a termination the
+    value of the next state is zero; after a truncation it is not.</figcaption>
+  </figure>
+  <div class="readout">
+    <div class="cell"><div class="k">bootstrap gate <span class="m">&nu;</span></div><div class="v"><span class="m">1 &minus; d</span></div><div class="n">closes at a termination</div></div>
+    <div class="cell"><div class="k">propagation gate <span class="m">&chi;</span></div><div class="v"><span class="m">(1&minus;d)(1&minus;u)</span></div><div class="n">closes at a termination or a truncation</div></div>
+  </div>
+  <p class="body-copy" style="margin-top:20px">At a termination both gates close, so the target
+  neither bootstraps from the next state nor carries later rewards back. At a truncation only
+  <span class="m">&chi;</span> closes. The next state still has value and the target bootstraps
+  from it, but the rest of the window belongs to another episode, so its rewards are not carried
+  back.</p>
+</section>
+
+<!-- controls -->
+<section>
+  <div class="controls">
+    <div class="ctl-grid">
+      <div class="ctl">
+        <div class="ctl-top"><label for="lam">&lambda;</label><span class="val" id="lam-v"></span></div>
+        <input type="range" id="lam" min="0" max="0.95" step="0.05" value="0.75">
+        <span class="hint">Weight on collected rewards relative to the critic&rsquo;s estimate. At 0
+        the target is the reference 1-step target.</span>
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label for="pos">boundary at transition</label><span class="val" id="pos-v"></span></div>
+        <input type="range" id="pos" min="1" max="6" step="1" value="4">
+        <span class="hint">Where the episode ends inside the window.</span>
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label>kind of ending</label></div>
+        <div class="seg" role="group" aria-label="Kind of ending">
+          <button id="k-none" aria-pressed="false">none</button>
+          <button id="k-tr" aria-pressed="true">truncation</button>
+          <button id="k-te" aria-pressed="false">termination</button>
+        </div>
+        <span class="hint">Truncation is a time limit; termination is a terminal state.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 -->
+<section>
+  <div class="act"><span class="num">03</span><h2>How the gates enter the backward recursion</h2></div>
+  <p class="sub body-copy">The target at the front of the window is computed backwards. Each
+  transition adds its reward to a discounted mix of the critic&rsquo;s estimate and the next
+  target, and the gates determine which terms reach the front.</p>
+  <figure class="plot">
+    <div class="scroller"><svg id="chain" viewBox="0 0 760 330" role="img"
+      aria-label="The window as a chain of transitions. Each carries a reward into the target with a weight that decays, and the chain is cut at the gate so no reward beyond it contributes. Where the chain is cut the critic's bootstrap enters at full weight instead."></svg></div>
+    <figcaption id="chain-cap"></figcaption>
+  </figure>
+  <div class="readout" id="out"></div>
+  <div class="verdict" id="verdict"></div>
+</section>
+
+<!-- 04 -->
+<section>
+  <div class="act"><span class="num">04</span><h2>Treating a truncation as a termination</h2></div>
+  <p class="sub body-copy">If the time limit is recorded as a termination, <span class="m">&nu;</span>
+  closes at the boundary when it should stay open. The bootstrap is dropped and the target loses
+  the value of the successor state.</p>
+  <figure class="plot">
+    <div class="scroller"><svg id="bias" viewBox="0 0 760 260" role="img"
+      aria-label="Error in the value target at each position in the window when a truncation is treated as a termination. At lambda equals zero only the boundary transition is wrong; as lambda rises the error propagates backwards through the window, decaying by gamma times lambda per step."></svg></div>
+    <figcaption id="bias-cap"></figcaption>
+  </figure>
+  <div class="verdict no" id="bias-verdict"></div>
+
+  <hr class="rule">
+  <div class="aside">
+    <h3>Why training does not reveal the error</h3>
+    <p>The loss is still a regression onto a target of roughly the right size, the gradients
+    stay finite and the training curve still rises. The critic learns that some states are worth
+    far less than they are, but only at positions near a boundary, which are a minority of the
+    batch.</p>
+    <p>The error is proportional to how often windows cross a boundary. Short episodes and long
+    windows make crossings common. An episodic buffer rules them out, so implementations built
+    on one do not show the error.</p>
+  </div>
+</section>
+
+<!-- 05 -->
+<section>
+  <div class="act"><span class="num">05</span><h2>Proposition 2: the target as a sum of gated terms</h2></div>
+  <p class="sub body-copy">Proposition&nbsp;2 writes the backward recursion as a single sum.
+  Each reward term carries a product of propagation gates, so one closed gate zeroes every later
+  reward. Each bootstrap term carries a <span class="m">&nu;</span>, which a termination sets to
+  zero and a truncation does not.</p>
+  <div class="eq" id="eq"></div>
+  <div class="claims" style="margin-top:24px">
+    <div class="claim"><span class="tag yes">claims</span><p>The sum is an exact rewriting of the
+    backward recursion: the two give the same number for every gate pattern and every
+    <span class="m">&lambda;</span>. It is checked against 20,000 random windows at every anchor
+    position.</p></div>
+    <div class="claim"><span class="tag yes">claims</span><p>At <span class="m">&lambda;&thinsp;=&thinsp;0</span>,
+    every gate assignment reduces termwise to <span class="m">r + &gamma;&nu;q</span>, the
+    reference 1-step target, which the <span class="m">&lambda;</span> slider shows at zero. The
+    baseline arm of every ablation is therefore the reference agent itself rather than a
+    reimplementation.</p></div>
+    <div class="claim"><span class="tag no">not</span><p>The sum is not the textbook
+    <span class="m">&lambda;</span>-return. With gates present the mixture weights include the
+    gate products, and <span class="m">(1&minus;&lambda;&chi;)</span> replaces
+    <span class="m">(1&minus;&lambda;)</span>. The two agree only when no gate closes inside the
+    window.</p></div>
+    <div class="claim"><span class="tag no">not</span><p>The proposition describes what the
+    recursion computes and says nothing about whether multi-step targets help, which is a
+    separate result.</p></div>
+  </div>
+</section>
+
+<hr class="rule">
+<p class="foot">Rewards and critic estimates on this page are illustrative and sized for a
+locomotion task; the discount is the reference agent&rsquo;s <span class="m">&gamma; = 0.97</span>.
+All numbers are computed live from the recursion, and the repository re-checks the forward-view
+identity against 20,000 random windows.</p>
+
+</div>
+
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i);};
+  var G=0.97, L=8;
+  var R=[1.4,1.6,1.5,1.7,1.5,1.3,1.6,1.5];        // rewards r_0..r_7
+  var Q=[50,48,51,49,52,50,47,49,48];             // critic estimates q_0..q_8
+  var st={lam:0.75,pos:4,kind:'tr'};
+
+  function gates(kind,pos){
+    var d=[],u=[];
+    for(var i=0;i<L;i++){ d.push(0); u.push(0); }
+    if(kind==='te') d[pos]=1;
+    if(kind==='tr') u[pos]=1;
+    var nu=[],chi=[];
+    for(i=0;i<L;i++){ nu.push(1-d[i]); chi.push((1-d[i])*(1-u[i])); }
+    return {d:d,u:u,nu:nu,chi:chi};
+  }
+  function backward(g,lam){
+    var Gv=new Array(L+1); Gv[L]=Q[L];
+    for(var t=L-1;t>=0;t--)
+      Gv[t]=R[t]+G*g.nu[t]*((1-lam*g.chi[t])*Q[t+1]+lam*g.chi[t]*Gv[t+1]);
+    return Gv;
+  }
+  // Proposition 2, anchored at t=0
+  function terms(g,lam){
+    var n=L, C=[1];
+    for(var k=1;k<n;k++) C.push(C[k-1]*g.chi[k-1]);
+    var rw=[], bs=[];
+    for(k=0;k<n;k++) rw.push(Math.pow(G*lam,k)*C[k]*R[k]);
+    bs.push(0);
+    for(k=1;k<n;k++) bs.push(Math.pow(G,k)*Math.pow(lam,k-1)*C[k-1]*g.nu[k-1]*(1-lam*g.chi[k-1])*Q[k]);
+    var fin=Math.pow(G,n)*Math.pow(lam,n-1)*C[n-1]*g.nu[L-1]*Q[L];
+    return {C:C,rw:rw,bs:bs,fin:fin,
+            sum:rw.reduce(function(a,b){return a+b;},0)+bs.reduce(function(a,b){return a+b;},0)+fin};
+  }
+
+  /* ---------- 01 buffer ---------- */
+  (function(){
+    var s='', x0=40, W=680, cut=0.52, y=52, h=34;
+    s+='<rect x="'+x0+'" y="'+y+'" width="'+(W*cut).toFixed(1)+'" height="'+h+'" fill="var(--rw-wash)" stroke="var(--rw)" stroke-width="1"/>';
+    s+='<rect x="'+(x0+W*cut).toFixed(1)+'" y="'+y+'" width="'+(W*(1-cut)).toFixed(1)+'" height="'+h+'" fill="var(--bs-wash)" stroke="var(--bs)" stroke-width="1"/>';
+    s+='<text x="'+(x0+W*cut/2).toFixed(1)+'" y="'+(y+22)+'" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--rw)">episode A</text>';
+    s+='<text x="'+(x0+W*cut+W*(1-cut)/2).toFixed(1)+'" y="'+(y+22)+'" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--bs)">episode B</text>';
+    s+='<line x1="'+(x0+W*cut).toFixed(1)+'" y1="'+(y-12)+'" x2="'+(x0+W*cut).toFixed(1)+'" y2="'+(y+h+46)+'" stroke="var(--warn)" stroke-width="1.6" stroke-dasharray="4 3"/>';
+    s+='<text x="'+(x0+W*cut).toFixed(1)+'" y="'+(y-18)+'" text-anchor="middle" font-size="11" font-weight="600" fill="var(--warn)">boundary</text>';
+    s+='<text x="'+x0+'" y="36" font-size="11" fill="var(--ink-faint)">one sequential buffer, episodes stored back to back</text>';
+    [[0.10,'inside A'],[0.40,'crosses boundary'],[0.70,'inside B']].forEach(function(w,i){
+      var wx=x0+W*w[0], ww=W*0.19, wy=y+h+14;
+      var hot=(i===1);
+      s+='<rect x="'+wx.toFixed(1)+'" y="'+wy+'" width="'+ww.toFixed(1)+'" height="26" rx="4" fill="'+(hot?'var(--warn-wash)':'var(--bg-alt)')+'" stroke="'+(hot?'var(--warn)':'var(--ink-faint)')+'" stroke-width="'+(hot?1.6:1)+'"/>';
+      s+='<text x="'+(wx+ww/2).toFixed(1)+'" y="'+(wy+17)+'" text-anchor="middle" font-size="11" font-weight="'+(hot?600:400)+'" fill="'+(hot?'var(--warn)':'var(--ink-soft)')+'">'+w[1]+'</text>';
+    });
+    s+='<text x="'+x0+'" y="136" font-size="11" fill="var(--ink-faint)">three sampled windows of length L = H + ℓ</text>';
+    $('buf').innerHTML=s;
+  })();
+
+  /* ---------- 02 two endings ---------- */
+  (function(){
+    var s='';
+    function panel(x,title,col,cut,ghost,note){
+      var w=320, y0=54, h=96;
+      s+='<text x="'+(x+w/2)+'" y="34" text-anchor="middle" font-size="13" font-weight="600" fill="'+col+'">'+title+'</text>';
+      var d='', n=26;
+      for(var i=0;i<=n;i++){
+        var t=i/n, px=x+18+t*(w-60), py=y0+h-18-Math.sin(t*3.1)*46-t*10;
+        d+=(d?'L':'M')+px.toFixed(1)+','+py.toFixed(1);
+        if(t>=cut) break;
+      }
+      s+='<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="2.6" stroke-linecap="round"/>';
+      var bx=x+18+cut*(w-60);
+      if(ghost){
+        var g='';
+        for(i=0;i<=n;i++){
+          var t2=i/n; if(t2<cut) continue;
+          var gx=x+18+t2*(w-60), gy=y0+h-18-Math.sin(t2*3.1)*46-t2*10;
+          g+=(g?'L':'M')+gx.toFixed(1)+','+gy.toFixed(1);
+        }
+        s+='<path d="'+g+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-dasharray="4 4" opacity=".4"/>';
+        s+='<line x1="'+bx.toFixed(1)+'" y1="'+y0+'" x2="'+bx.toFixed(1)+'" y2="'+(y0+h)+'" stroke="var(--warn)" stroke-width="1.6" stroke-dasharray="3 3"/>';
+      } else {
+        s+='<rect x="'+bx.toFixed(1)+'" y="'+y0+'" width="8" height="'+h+'" fill="var(--warn)" opacity=".8"/>';
+        for(var k=0;k<4;k++)
+          s+='<line x1="'+(bx+10)+'" y1="'+(y0+12+k*24)+'" x2="'+(x+w-26)+'" y2="'+(y0+12+k*24)+'" stroke="var(--border)" stroke-width="1"/>';
+      }
+      s+='<text x="'+(x+w/2)+'" y="'+(y0+h+30)+'" text-anchor="middle" font-size="11.5" fill="var(--ink-soft)">'+note+'</text>';
+    }
+    panel(40,'termination (terminal state)','var(--warn)',0.62,false,'nothing follows; the value of the next state is 0');
+    panel(400,'truncation (time limit)','var(--rw)',0.62,true,'the trajectory continues past the cut; the value of the next state is not 0');
+    $('ends').innerHTML=s;
+  })();
+
+  /* ---------- 03 the chain ---------- */
+  function chain(){
+    var g=gates(st.kind,st.pos), T=terms(g,st.lam), Gv=backward(g,st.lam);
+    var s='', x0=44, cw=78, gap=10, y=150, ch=52;
+    var maxw=Math.max.apply(null,T.rw.concat([0.001]));
+    var maxb=Math.max.apply(null,T.bs.concat([T.fin,0.001]));
+    s+='<text x="'+x0+'" y="30" font-size="11" fill="var(--rw)" font-weight="600">collected rewards reaching the target</text>';
+    s+='<text x="'+x0+'" y="316" font-size="11" fill="var(--bs)" font-weight="600">critic estimates, entering where the reward chain stops</text>';
+    for(var k=0;k<L;k++){
+      var x=x0+k*(cw+gap), live=T.rw[k]>1e-9 || k===0;
+      // reward bar above
+      var bh=Math.max(2,T.rw[k]/maxw*74);
+      s+='<rect x="'+(x+8)+'" y="'+(122-bh).toFixed(1)+'" width="'+(cw-16)+'" height="'+bh.toFixed(1)+'" rx="2" fill="var(--rw)" opacity="'+(T.rw[k]>1e-9?0.9:0.14)+'"/>';
+      s+='<text x="'+(x+cw/2)+'" y="'+(118-bh).toFixed(1)+'" text-anchor="middle" font-size="10" fill="var(--rw)" font-family="var(--mono)">'+(T.rw[k]>1e-9?T.rw[k].toFixed(2):'0')+'</text>';
+      // the transition cell
+      s+='<rect x="'+x+'" y="'+y+'" width="'+cw+'" height="'+ch+'" rx="5" fill="'+(live?'var(--bg-alt)':'var(--raise)')+'" stroke="'+(live?'var(--ink-faint)':'var(--border)')+'" stroke-width="1"/>';
+      s+='<text x="'+(x+cw/2)+'" y="'+(y+20)+'" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)" font-family="var(--mono)">t+'+k+'</text>';
+      s+='<text x="'+(x+cw/2)+'" y="'+(y+40)+'" text-anchor="middle" font-size="13" font-weight="600" fill="'+(live?'var(--ink)':'var(--ink-faint)')+'" font-family="var(--mono)">r='+R[k].toFixed(1)+'</text>';
+      // bootstrap stub below
+      if(T.bs[k]>1e-9){
+        var bb=Math.max(2,T.bs[k]/maxb*66);
+        s+='<rect x="'+(x+8)+'" y="'+(y+ch+16)+'" width="'+(cw-16)+'" height="'+bb.toFixed(1)+'" rx="2" fill="var(--bs)" opacity=".85"/>';
+        s+='<line x1="'+(x+cw/2)+'" y1="'+(y+ch+14)+'" x2="'+(x+cw/2)+'" y2="'+(y+ch+2)+'" stroke="var(--bs)" stroke-width="1.6" marker-end="url(#up)"/>';
+        s+='<text x="'+(x+cw/2)+'" y="'+(y+ch+16+bb+12).toFixed(1)+'" text-anchor="middle" font-size="10" fill="var(--bs)" font-family="var(--mono)">'+T.bs[k].toFixed(1)+'</text>';
+      }
+      // link to the next cell
+      if(k<L-1){
+        var open=g.chi[k]>0 && st.lam>0;
+        var lx=x+cw, lx2=x+cw+gap;
+        if(open){
+          s+='<line x1="'+lx+'" y1="'+(y+ch/2)+'" x2="'+lx2+'" y2="'+(y+ch/2)+'" stroke="var(--rw)" stroke-width="2.4"/>';
+        } else {
+          s+='<line x1="'+lx+'" y1="'+(y+ch/2)+'" x2="'+(lx+3)+'" y2="'+(y+ch/2)+'" stroke="var(--warn)" stroke-width="2.4"/>';
+          s+='<line x1="'+(lx2-3)+'" y1="'+(y+ch/2)+'" x2="'+lx2+'" y2="'+(y+ch/2)+'" stroke="var(--warn)" stroke-width="2.4"/>';
+          if(g.chi[k]===0){
+            s+='<line x1="'+(lx+gap/2)+'" y1="'+(y-8)+'" x2="'+(lx+gap/2)+'" y2="'+(y+ch+8)+'" stroke="var(--warn)" stroke-width="1.6" stroke-dasharray="3 3"/>';
+            s+='<text x="'+(lx+gap/2)+'" y="'+(y-14)+'" text-anchor="middle" font-size="10" font-weight="600" fill="var(--warn)">'+(st.kind==='te'?'termination':'truncation')+'</text>';
+          }
+        }
+      }
+    }
+    // final bootstrap
+    if(T.fin>1e-9){
+      var fx=x0+L*(cw+gap);
+      s+='<text x="'+(fx-4)+'" y="'+(y+30)+'" font-size="10.5" fill="var(--bs)" font-family="var(--mono)">q_L '+T.fin.toFixed(1)+'</text>';
+    }
+    s='<defs><marker id="up" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--bs)"/></marker></defs>'+s;
+    $('chain').innerHTML=s;
+
+    var rwS=T.rw.reduce(function(a,b){return a+b;},0), bsS=T.bs.reduce(function(a,b){return a+b;},0)+T.fin;
+    $('out').innerHTML=
+      '<div class="cell"><div class="k">from real rewards</div><div class="v" style="color:var(--rw)">'+rwS.toFixed(2)+'</div><div class="n">'+T.rw.filter(function(v){return v>1e-9;}).length+' of '+L+' transitions contribute</div></div>'+
+      '<div class="cell"><div class="k">from the critic</div><div class="v" style="color:var(--bs)">'+bsS.toFixed(2)+'</div><div class="n">bootstrap terms</div></div>'+
+      '<div class="cell"><div class="k">target <span class="m">G_t</span></div><div class="v">'+T.sum.toFixed(2)+'</div><div class="n">matches the recursion to '+Math.abs(T.sum-Gv[0]).toExponential(0)+'</div></div>';
+
+    var v=$('verdict'), k=st.kind;
+    if(st.lam===0){
+      v.className='verdict';
+      v.innerHTML='At λ = 0 every link is closed, only the first reward survives, and the target '+
+        'is <span class="m">r + γνq</span>, the reference 1-step target, for every gate assignment. '+
+        'This is Corollary 2, and it is why the baseline arm of every ablation is the reference agent '+
+        'rather than a reimplementation.';
+    } else if(k==='none'){
+      v.className='verdict';
+      v.innerHTML='With no boundary in the window, every reward contributes with weight decaying '+
+        'as <span class="m">(γλ)<sup>k</sup></span>, and the bootstrap enters at the far end. This '+
+        'is the textbook λ-return truncated at the window.';
+    } else if(k==='tr'){
+      v.className='verdict';
+      v.innerHTML='With a truncation at transition '+st.pos+', no later reward reaches the target, '+
+        'because those rewards belong to a different trajectory. <span class="m">ν</span> stays open, '+
+        'so the critic’s estimate of the real successor state enters at full weight where the '+
+        'rewards stop.';
+    } else {
+      v.className='verdict';
+      v.innerHTML='With a termination at transition '+st.pos+', both gates close and the target '+
+        'there is its reward alone, which is the correct treatment when the episode actually ended.';
+    }
+    $('chain-cap').innerHTML='Green bars show how much of each collected reward reaches the target '+
+      'at the front of the window. Blue bars show what the critic’s estimate contributes and where '+
+      'it enters. The link between two cells is the propagation gate <span class="m">λχ</span>; '+
+      'when it closes, rewards to its right no longer contribute.';
+    bias();
+  }
+
+  /* ---------- 04 bias ---------- */
+  function bias(){
+    var gT=gates('tr',st.pos), gC=gates('te',st.pos);   // correct vs conflated
+    var A=backward(gT,st.lam), B=backward(gC,st.lam);
+    var d=[]; for(var t=0;t<L;t++) d.push(A[t]-B[t]);
+    var mx=Math.max.apply(null,d.concat([1]));
+    var s='', x0=44, cw=78, gap=10, base=196;
+    s+='<line x1="'+x0+'" y1="'+base+'" x2="'+(x0+L*(cw+gap)-gap)+'" y2="'+base+'" stroke="var(--border)"/>';
+    s+='<text x="'+x0+'" y="30" font-size="11.5" font-weight="600" fill="var(--warn)">error in the target by position in the window</text>';
+    for(var t=0;t<L;t++){
+      var x=x0+t*(cw+gap), h=Math.max(0,d[t]/mx*136);
+      s+='<rect x="'+(x+8)+'" y="'+(base-h).toFixed(1)+'" width="'+(cw-16)+'" height="'+h.toFixed(1)+'" rx="2" fill="var(--warn)" opacity="'+(d[t]>1e-6?0.9:0.12)+'"/>';
+      if(d[t]>1e-6) s+='<text x="'+(x+cw/2)+'" y="'+(base-h-6).toFixed(1)+'" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--warn)" font-family="var(--mono)">'+d[t].toFixed(1)+'</text>';
+      s+='<text x="'+(x+cw/2)+'" y="'+(base+17)+'" text-anchor="middle" font-size="10.5" fill="'+(t===st.pos?'var(--warn)':'var(--ink-faint)')+'" font-weight="'+(t===st.pos?600:400)+'" font-family="var(--mono)">t+'+t+'</text>';
+      if(t===st.pos) s+='<text x="'+(x+cw/2)+'" y="'+(base+33)+'" text-anchor="middle" font-size="9.5" fill="var(--warn)">boundary</text>';
+    }
+    s+='<text x="'+x0+'" y="'+(base+52)+'" font-size="11" fill="var(--ink-faint)">correct target minus the target you get if a truncation is treated as a termination</text>';
+    $('bias').innerHTML=s;
+
+    var atB=d[st.pos], atFront=d[0];
+    $('bias-cap').innerHTML='At the boundary the error is <span class="m">γq</span> = '+
+      atB.toFixed(2)+', the full discounted value of the successor state, and it does not depend '+
+      'on λ. λ sets how far back the error reaches: each step toward the front multiplies it by '+
+      '<span class="m">γλ</span> = '+(G*st.lam).toFixed(3)+'.';
+    var v=$('bias-verdict');
+    if(st.lam===0){
+      v.innerHTML='At λ = 0 only the boundary transition is wrong, by '+atB.toFixed(1)+' on a target '+
+        'of about '+backward(gT,0)[st.pos].toFixed(0)+'. Raising λ lets the error propagate toward '+
+        'the front of the window.';
+    } else {
+      v.innerHTML='The target at the front of the window is off by '+atFront.toFixed(1)+
+        ' out of '+backward(gT,st.lam)[0].toFixed(0)+', and the critic is regressed onto that number '+
+        'as if it were correct. Every target between the boundary and the front carries part of the '+
+        'error, decaying by γλ per step.';
+    }
+  }
+
+  /* ---------- 05 the formula ---------- */
+  (function(){
+    $('eq').innerHTML=
+      '<span style="color:var(--ink-faint)">rewards  </span>  G_t = Σ<sub>k</sub> '+
+      '(γλ)<sup>k</sup> <b style="color:var(--warn)">C_k</b> r<sub>t+k</sub><br>'+
+      '<span style="color:var(--ink-faint)">bootstraps</span>       + Σ<sub>k≥1</sub> '+
+      'γ<sup>k</sup>λ<sup>k−1</sup> <b style="color:var(--warn)">C<sub>k−1</sub></b> '+
+      '<b style="color:var(--bs)">ν<sub>t+k−1</sub></b> (1 − λχ<sub>t+k−1</sub>) q<sub>t+k</sub><br>'+
+      '<span style="color:var(--ink-faint)">window end</span>       + γ<sup>n</sup>λ<sup>n−1</sup> '+
+      '<b style="color:var(--warn)">C<sub>n−1</sub></b> <b style="color:var(--bs)">ν<sub>L−1</sub></b> q<sub>L</sub>'+
+      '<br><br><span style="color:var(--ink-faint)">where  </span>'+
+      '<b style="color:var(--warn)">C_k</b> = χ<sub>t</sub>χ<sub>t+1</sub>···χ<sub>t+k−1</sub>'+
+      '<span style="color:var(--ink-faint)">   (one closed gate zeroes every later term)</span>';
+  })();
+
+  function render(){
+    $('lam-v').textContent=st.lam.toFixed(2);
+    $('pos-v').textContent='t+'+st.pos;
+    [['none','k-none'],['tr','k-tr'],['te','k-te']].forEach(function(p){
+      $(p[1]).setAttribute('aria-pressed', String(st.kind===p[0])); });
+    chain();
+  }
+  $('lam').addEventListener('input',function(){ st.lam=parseFloat(this.value); render(); });
+  $('pos').addEventListener('input',function(){ st.pos=parseInt(this.value,10); render(); });
+  $('k-none').addEventListener('click',function(){ st.kind='none'; render(); });
+  $('k-tr').addEventListener('click',function(){ st.kind='tr'; render(); });
+  $('k-te').addEventListener('click',function(){ st.kind='te'; render(); });
+  render();
+})();
+</script>
